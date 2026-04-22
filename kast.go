@@ -7,6 +7,9 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/ntnn/kast/pkg/kubectl"
 	"github.com/ntnn/kast/pkg/kustomize"
@@ -73,6 +76,23 @@ func makeRunner(action actionFunc) simplcli.Runner {
 	}
 }
 
+// rfc1123Re matches characters not allowed in an RFC 1123.
+var rfc1123Re = regexp.MustCompile(`[^a-z0-9-]+`)
+
+// rfc1123label turns the given dir into a valid RFC 1123 name so it can
+// be used as either a kube resource name or an applyset name.
+func rfc1123label(dir string) string {
+	name := filepath.Base(filepath.Clean(dir))
+	name = strings.ToLower(name)
+	name = rfc1123Re.ReplaceAllString(name, "-")
+	name = strings.Trim(name, "-")
+	if len(name) > 63 {
+		name = name[:63]
+		name = strings.TrimRight(name, "-")
+	}
+	return name
+}
+
 func runApply(ctx context.Context, stdout, stderr io.Writer, f flags, dir string) error {
 	manifests, err := kustomize.Render(dir)
 	if err != nil {
@@ -84,7 +104,7 @@ func runApply(ctx context.Context, stdout, stderr io.Writer, f flags, dir string
 		return fmt.Errorf("sorting: %w", err)
 	}
 
-	return kubectl.Apply(ctx, stdout, stderr, f.kubeconfig, sorted, dir, f.dryRun)
+	return kubectl.Apply(ctx, stdout, stderr, f.kubeconfig, sorted, rfc1123label(dir), f.dryRun)
 }
 
 func runDiff(ctx context.Context, stdout, stderr io.Writer, f flags, dir string) error {
