@@ -5,7 +5,7 @@ go 1.26.2
 tool github.com/ntnn/mindl
 
 require (
-	github.com/ntnn/mindl v0.1.0
+	github.com/ntnn/mindl v0.1.1
 	github.com/stretchr/testify v1.11.1
 	k8s.io/apimachinery v0.35.4
 	k8s.io/cli-runtime v0.35.4
