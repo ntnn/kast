@@ -1,7 +1,7 @@
 GO ?= go
 TOOLS_DIR := hack/tools
 
-GOLANGCI_LINT_VER := 2.12.0
+GOLANGCI_LINT_VER := 2.12.1
 GOLANGCI_LINT := $(TOOLS_DIR)/golangci-lint-$(GOLANGCI_LINT_VER)
 GOLANGCI_LINT_FLAGS ?= --config $(realpath .golangci.yml)
 
