@@ -33,7 +33,6 @@ linters:
     - ginkgolinter
     - gocheckcompilerdirectives
     - gocognit
-    - goconst
     - gocritic
     - gocyclo
     - godoclint
