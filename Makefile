@@ -12,7 +12,7 @@ KUBECTL_VER := 1.35.1
 KUBECTL := $(TOOLS_DIR)/kubectl-$(KUBECTL_VER)
 
 .PHONY: check
-check: lint test
+check: lint test test-e2e
 
 .PHONY: lint
 lint: $(GOLANGCI_LINT)
