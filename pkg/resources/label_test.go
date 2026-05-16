@@ -1,4 +1,4 @@
-package main
+package resources
 
 import (
 	"testing"
@@ -19,7 +19,7 @@ func TestRFC1123Label(t *testing.T) {
 	for in, want := range tests {
 		t.Run(in, func(t *testing.T) {
 			t.Parallel()
-			require.Equal(t, want, rfc1123label(in))
+			require.Equal(t, want, RFC1123Label(in))
 		})
 	}
 }

@@ -1,15 +1,15 @@
-// Package kustomize renders kustomization directories using the krusty engine.
-package kustomize
+package resources
 
 import (
 	"sigs.k8s.io/kustomize/api/krusty"
+	"sigs.k8s.io/kustomize/api/resource"
 	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-// Render builds the kustomization at path with helm support enabled
-// and returns the rendered multi-document YAML.
-func Render(path string) ([]byte, error) {
+// Kustomize builds the kustomization at the given path with helm
+// support enabled and returns the rendered manifests.
+func Kustomize(path string) ([]*resource.Resource, error) {
 	opts := krusty.MakeDefaultOptions()
 	opts.PluginConfig = types.MakePluginConfig(
 		types.PluginRestrictionsNone,
@@ -26,5 +26,5 @@ func Render(path string) ([]byte, error) {
 		return nil, err
 	}
 
-	return m.AsYaml()
+	return m.Resources(), nil
 }

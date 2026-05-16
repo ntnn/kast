@@ -3,134 +3,49 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
-	"fmt"
 	"io"
-	"path/filepath"
-	"regexp"
-	"strings"
 
-	"github.com/ntnn/kast/pkg/kubectl"
-	"github.com/ntnn/kast/pkg/kustomize"
-	"github.com/ntnn/kast/pkg/order"
 	"codeberg.org/ntnn/mindl/pkg/simplcli"
+	"github.com/ntnn/kast/pkg/kast"
 )
 
 func main() {
-	simplcli.Entrypoint(simplcli.SimplCLI{
+	kaster := kast.New()
+	fs := flag.NewFlagSet("kast", flag.ExitOnError)
+	kaster.RegisterFlags(fs)
+
+	cli := simplcli.SimplCLI{
 		SubCmds: map[string]simplcli.SubCmd{
 			"apply": {
-				Runner: makeRunner(runApply),
+				Runner: wrapper(kaster.Apply),
 				Doc:    "Render and apply kustomize directories with server-side apply and applyset pruning",
 			},
 			"diff": {
-				Runner: makeRunner(runDiff),
+				Runner: wrapper(kaster.Diff),
 				Doc:    "Render and diff kustomize directories against the cluster",
 			},
 			"delete": {
-				Runner: makeRunner(runDelete),
+				Runner: wrapper(kaster.Delete),
 				Doc:    "Render and delete resources from kustomize directories",
 			},
-			"destroy": {
-				Runner: makeRunner(runDelete),
-				Doc:    "Alias for delete",
-			},
 		},
-	})
-}
-
-type flags struct {
-	dryRun     string
-	kubeconfig string
-}
-
-func parseFlags(args []string) (flags, []string, error) {
-	fs := flag.NewFlagSet("kast", flag.ContinueOnError)
-	var f flags
-	fs.StringVar(&f.dryRun, "dry-run", "server", "Dry-run strategy: none, client, server")
-	fs.StringVar(&f.kubeconfig, "kubeconfig", "", "Path to kubeconfig file")
-	if err := fs.Parse(args); err != nil {
-		return flags{}, nil, err
 	}
-	return f, fs.Args(), nil
+
+	simplcli.EntrypointWithFlags(cli, fs)
 }
 
-type actionFunc func(ctx context.Context, stdout, stderr io.Writer, f flags, dir string) error
+type action func(context.Context, string) error
 
-func makeRunner(action actionFunc) simplcli.Runner {
-	return func(ctx context.Context, stdout, stderr io.Writer, args []string) error {
-		f, dirs, err := parseFlags(args)
-		if err != nil {
-			return err
-		}
-		if len(dirs) == 0 {
-			return errors.New("at least one kustomize directory is required")
-		}
-		for _, dir := range dirs {
-			if err := action(ctx, stdout, stderr, f, dir); err != nil {
-				return fmt.Errorf("%s: %w", dir, err)
+func wrapper(fn action) simplcli.Runner {
+	return func(ctx context.Context, _, _ io.Writer, args []string) error {
+		// TODO: just for now. Ideally Kaster or a wrapper around it
+		// could do multiple dirs in parallel.
+		for _, arg := range args {
+			if err := fn(ctx, arg); err != nil {
+				return err
 			}
 		}
 		return nil
 	}
-}
-
-// rfc1123Re matches characters not allowed in an RFC 1123.
-var rfc1123Re = regexp.MustCompile(`[^a-z0-9-]+`)
-
-// rfc1123label turns the given dir into a valid RFC 1123 name so it can
-// be used as either a kube resource name or an applyset name.
-func rfc1123label(dir string) string {
-	name := filepath.Base(filepath.Clean(dir))
-	name = strings.ToLower(name)
-	name = rfc1123Re.ReplaceAllString(name, "-")
-	name = strings.Trim(name, "-")
-	if len(name) > 63 {
-		name = name[:63]
-		name = strings.TrimRight(name, "-")
-	}
-	return name
-}
-
-func runApply(ctx context.Context, stdout, stderr io.Writer, f flags, dir string) error {
-	manifests, err := kustomize.Render(dir)
-	if err != nil {
-		return fmt.Errorf("rendering: %w", err)
-	}
-
-	sorted, err := order.Sort(manifests)
-	if err != nil {
-		return fmt.Errorf("sorting: %w", err)
-	}
-
-	return kubectl.Apply(ctx, stdout, stderr, f.kubeconfig, sorted, rfc1123label(dir), f.dryRun)
-}
-
-func runDiff(ctx context.Context, stdout, stderr io.Writer, f flags, dir string) error {
-	manifests, err := kustomize.Render(dir)
-	if err != nil {
-		return fmt.Errorf("rendering: %w", err)
-	}
-
-	sorted, err := order.Sort(manifests)
-	if err != nil {
-		return fmt.Errorf("sorting: %w", err)
-	}
-
-	return kubectl.Diff(ctx, stdout, stderr, f.kubeconfig, sorted)
-}
-
-func runDelete(ctx context.Context, stdout, stderr io.Writer, f flags, dir string) error {
-	manifests, err := kustomize.Render(dir)
-	if err != nil {
-		return fmt.Errorf("rendering: %w", err)
-	}
-
-	sorted, err := order.SortReverse(manifests)
-	if err != nil {
-		return fmt.Errorf("sorting: %w", err)
-	}
-
-	return kubectl.Delete(ctx, stdout, stderr, f.kubeconfig, sorted, f.dryRun)
 }
