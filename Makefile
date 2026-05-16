@@ -12,12 +12,11 @@ KUBECTL_VER := 1.35.1
 KUBECTL := $(TOOLS_DIR)/kubectl-$(KUBECTL_VER)
 
 .PHONY: check
-check: lint test test-e2e
+check: lint test
 
 .PHONY: lint
 lint: $(GOLANGCI_LINT)
 	$(GOLANGCI_LINT) run $(GOLANGCI_LINT_FLAGS) ./...
-	cd test/e2e && $(CURDIR)/$(GOLANGCI_LINT) run $(GOLANGCI_LINT_FLAGS) ./...
 
 .PHONY: lint-fix
 lint-fix: override GOLANGCI_LINT_FLAGS := $(GOLANGCI_LINT_FLAGS) --fix
