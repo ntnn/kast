@@ -2,10 +2,10 @@ module github.com/ntnn/kast
 
 go 1.26.2
 
-tool github.com/ntnn/mindl
+tool codeberg.org/ntnn/mindl
 
 require (
-	github.com/ntnn/mindl v0.1.1
+	codeberg.org/ntnn/mindl v0.1.4-0.20260516155240-a85a12c054a7
 	github.com/stretchr/testify v1.11.1
 	k8s.io/apimachinery v0.36.0
 	k8s.io/cli-runtime v0.36.0

@@ -33,18 +33,18 @@ test-e2e: $(KCP) $(KUBECTL)
 
 $(GOLANGCI_LINT):
 	mkdir -p $(TOOLS_DIR)
-	$(GO) tool github.com/ntnn/mindl download -common -out $@ -tool golangci-lint -version $(GOLANGCI_LINT_VER)
+	$(GO) tool codeberg.org/ntnn/mindl download -common -out $@ -tool golangci-lint -version $(GOLANGCI_LINT_VER)
 
 $(KCP):
 	mkdir -p $(TOOLS_DIR)
-	$(GO) tool github.com/ntnn/mindl download -out $@ \
+	$(GO) tool codeberg.org/ntnn/mindl download -out $@ \
 		-url 'https://github.com/kcp-dev/kcp/releases/download/v{{.Version}}/kcp_{{.Version}}_{{.OS}}_{{.Arch}}.tar.gz' \
 		-inarchive 'bin/kcp' \
 		-version $(KCP_VER)
 
 $(KUBECTL):
 	mkdir -p $(TOOLS_DIR)
-	$(GO) tool github.com/ntnn/mindl download -out $@ \
+	$(GO) tool codeberg.org/ntnn/mindl download -out $@ \
 		-url 'https://dl.k8s.io/v{{.Version}}/kubernetes-client-{{.OS}}-{{.Arch}}.tar.gz' \
 		-inarchive 'kubernetes/client/bin/kubectl' \
 		-version $(KUBECTL_VER)

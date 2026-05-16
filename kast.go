@@ -14,7 +14,7 @@ import (
 	"github.com/ntnn/kast/pkg/kubectl"
 	"github.com/ntnn/kast/pkg/kustomize"
 	"github.com/ntnn/kast/pkg/order"
-	"github.com/ntnn/mindl/pkg/simplcli"
+	"codeberg.org/ntnn/mindl/pkg/simplcli"
 )
 
 func main() {
